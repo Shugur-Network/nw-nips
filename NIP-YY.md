@@ -254,7 +254,7 @@ Clients translate `blossom://` URLs to configured Blossom endpoints.
 2. **Author sets DNS:**
 
    ```
-   _nweb.example.com TXT '{"v":1,"pk":"npub1...","relays":["wss://relay.damus.io"]}'
+   _nweb.example.com TXT '{"v":1,"pk":"npub1...","relays":["wss://shu01.shugur.net"]}'
    ```
 
 3. **User visits site:**
@@ -266,5 +266,8 @@ Clients translate `blossom://` URLs to configured Blossom endpoints.
 
 ## Reference Implementation
 
-- Browser extension: https://github.com/Shugur-Network/nostr-web/tree/main/extension
-- Publisher CLI: https://github.com/Shugur-Network/nostr-web/tree/main/publisher
+- Browser extension:
+  - https://github.com/Shugur-Network/nostr-web/tree/main/extension
+- Publisher CLI:
+  - https://www.npmjs.com/package/nw-publish (Recommended)
+  - https://github.com/Shugur-Network/nostr-web/tree/main/publisher
