@@ -339,5 +339,5 @@ If all listed relays censor content:
 
 ## Reference Implementation
 
-- DNS lookup: https://github.com/Shugur-Network/nostr-web/tree/main/extension
-- Record generation: https://github.com/Shugur-Network/nostr-web/tree/main/publisher
+- DNS lookup: https://github.com/Shugur-Network/nw-nips/tree/main/extension
+- Record generation: https://github.com/Shugur-Network/nw-nips/tree/main/publisher

@@ -267,7 +267,7 @@ Clients translate `blossom://` URLs to configured Blossom endpoints.
 ## Reference Implementation
 
 - Browser extension:
-  - https://github.com/Shugur-Network/nostr-web/tree/main/extension
+  - https://github.com/Shugur-Network/nw-nips/tree/main/extension
 - Publisher CLI:
   - https://www.npmjs.com/package/nw-publish (Recommended)
-  - https://github.com/Shugur-Network/nostr-web/tree/main/publisher
+  - https://github.com/Shugur-Network/nw-nips/tree/main/publisher

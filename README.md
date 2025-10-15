@@ -67,4 +67,3 @@ MIT License - see [LICENSE](./LICENSE) for details.
 ---
 
 **Nostr Web by [Shugur](https://shugur.com)** — Decentralizing the web, one site at a time 🌐
-
