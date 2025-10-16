@@ -197,6 +197,14 @@
         pointer-events: none;
       }
 
+      .btn-container {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+
       .info-text {
         margin-top: 1.5rem;
         font-size: 0.875rem;
@@ -342,29 +350,33 @@
             the Nostr Web browser extension to view it.
           </p>
 
-          <!-- When Chrome Web Store is ready, change btn-disabled to btn-primary and update href -->
-          <a href="#" class="btn btn-disabled">
-            Chrome Web Store — Coming Soon
-          </a>
-
-          <!-- Uncomment this when extension is published to Chrome Web Store
-          <a
-            href="https://chrome.google.com/webstore/detail/YOUR_EXTENSION_ID"
-            class="btn btn-primary"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Install Extension
-          </a>
-          -->
+          <div class="btn-container">
+            <a
+              href="https://chromewebstore.google.com/detail/hhdngjdmlabdachflbdfapkogadodkif/preview?hl=en&authuser=0"
+              class="btn btn-primary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Install for Chrome
+            </a>
+            <a
+              href="https://addons.mozilla.org/en-GB/firefox/addon/nostr-web-browser/"
+              class="btn btn-primary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Install for Firefox
+            </a>
+          </div>
 
           <p class="info-text">
-            Currently under review. Check back soon or
+            Available for Chrome and Firefox. For manual installation or other
+            browsers, visit
             <a
               href="https://github.com/Shugur-Network/nw-extention/releases"
               target="_blank"
-              >download manually from GitHub</a
-            >. Supports Chrome & Firefox.
+              >GitHub Releases</a
+            >.
           </p>
         </div>
       </div>
@@ -372,7 +384,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-      Nostr Web by <a href="https://shugur.com" target="_blank">Shugur</a> ·
+      Nostr Web by <a href="https://shugur.com" target="_blank">Shugur</a> |
       <a href="https://github.com/Shugur-Network/nw-extention" target="_blank"
         >Extension</a
       >
