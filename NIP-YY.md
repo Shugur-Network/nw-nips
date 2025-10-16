@@ -8,7 +8,7 @@ This NIP defines a set of event kinds for hosting static websites on Nostr, enab
 
 ## Abstract
 
-Nostr Web Pages (NWP) allows publishing static websites as Nostr events. HTML, CSS, and JavaScript are stored as immutable events, while page manifests and site indexes use parameterized replaceable events to maintain current references. This enables decentralized, verifiable, and censorship-resistant websites.
+Nostr Web Pages (NWP) allows publishing static websites as Nostr events. Web assets (HTML, CSS, JavaScript, fonts, etc.) are stored as regular events (kind 1125), page manifests (1126) define routes, the entrypoint (11126) provides the current entry to a site, and the site index (31126) maps routes using addressable events. This enables decentralized, verifiable, and censorship-resistant websites.
 
 ## Motivation
 
@@ -23,35 +23,37 @@ Traditional web hosting relies on centralized servers that can be censored, take
 
 This NIP defines the following event kinds:
 
-| Kind    | Description        | Type                      |
-| ------- | ------------------ | ------------------------- |
-| `40000` | HTML content       | Immutable                 |
-| `40001` | CSS stylesheet     | Immutable                 |
-| `40002` | JavaScript module  | Immutable                 |
-| `40003` | Component/Fragment | Immutable                 |
-| `34235` | Page Manifest      | Parameterized Replaceable |
-| `34236` | Site Index         | Parameterized Replaceable |
+| Kind    | Description   | Type        |
+| ------- | ------------- | ----------- |
+| `1125`  | Asset         | Regular     |
+| `1126`  | Page Manifest | Regular     |
+| `31126` | Site Index    | Addressable |
+| `11126` | Entrypoint    | Replaceable |
 
-### Immutable Assets (40000-40003)
+### Regular Assets (1125)
 
-Content-addressed assets that never change after publication.
+Content-addressed assets for web pages. All web assets (HTML, CSS, JavaScript, fonts, etc.) use kind `1125` with MIME type specified in the `m` tag.
 
 **Required tags:**
 
-- `m` - MIME type (`text/html`, `text/css`, `text/javascript`, etc.)
-- `sha256` - Hex-encoded SHA-256 hash of the `content` field (for Subresource Integrity)
+- `m` - MIME type (e.g., `text/html`, `text/css`, `text/javascript`, `application/wasm`, `font/woff2`)
+- `x` - Hex-encoded SHA-256 hash of the `content` field (for content deduplication)
 
-**Example HTML event (kind 40000):**
+**Optional tags:**
+
+- `alt` - Alternative text or description for the asset
+
+**Example HTML asset:**
 
 ```json
 {
-  "kind": 40000,
-  "pubkey": "<site-author-pubkey>",
+  "kind": 1125,
+  "pubkey": "<site-pubkey>",
   "created_at": 1234567890,
   "tags": [
     ["m", "text/html"],
-    ["sha256", "a1b2c3..."],
-    ["title", "Home Page"]
+    ["x", "a1b2c3..."],
+    ["alt", "Home Page"]
   ],
   "content": "<!DOCTYPE html><html>...</html>",
   "id": "<event-id>",
@@ -59,69 +61,35 @@ Content-addressed assets that never change after publication.
 }
 ```
 
-**Example CSS event (kind 40001):**
+### Page Manifest (1126)
 
-```json
-{
-  "kind": 40001,
-  "pubkey": "<site-author-pubkey>",
-  "created_at": 1234567890,
-  "tags": [
-    ["m", "text/css"],
-    ["sha256", "d4e5f6..."]
-  ],
-  "content": "body { margin: 0; }",
-  "id": "<event-id>",
-  "sig": "<signature>"
-}
-```
-
-**Example JavaScript event (kind 40002):**
-
-```json
-{
-  "kind": 40002,
-  "pubkey": "<site-author-pubkey>",
-  "created_at": 1234567890,
-  "tags": [
-    ["m", "text/javascript"],
-    ["sha256", "g7h8i9..."]
-  ],
-  "content": "console.log('Hello Nostr Web');",
-  "id": "<event-id>",
-  "sig": "<signature>"
-}
-```
-
-### Page Manifest (34235)
-
-Parameterized replaceable event that links to current assets for a specific route.
+Regular event that links assets for a specific page. Each page version is a separate event.
 
 **Required tags:**
 
-- `d` - Route path (e.g., `/`, `/about`, `/blog/post-1`)
-- `e` - Asset event IDs with markers: `html`, `css`, `js`, `component`
+- `e` - Asset event IDs (kind 1125): `["e", "<event-id>", "<recommended relay URL, optional>"]`
+  - Assets are identified by their event ID; MIME type is specified in the asset's `m` tag
 
 **Optional tags:**
 
 - `title` - Page title
 - `description` - Page description
-- `csp` - Content Security Policy directives
-- `default_route` - Mark as default route (boolean flag)
+- `route` - Page route/path for reference (e.g., `/`, `/about`)
+- `csp` - Content Security Policy directives to override the default CSP for this specific page
 
 **Example:**
 
 ```json
 {
-  "kind": 34235,
-  "pubkey": "<site-author-pubkey>",
+  "kind": 1126,
+  "pubkey": "<site-pubkey>",
   "created_at": 1234567890,
   "tags": [
-    ["d", "/"],
-    ["e", "<html-event-id>", "html"],
-    ["e", "<css-event-id-1>", "css"],
-    ["e", "<css-event-id-2>", "css"],
-    ["e", "<js-event-id>", "js"],
+    ["e", "<html-event-id>", "wss://relay.example.com"],
+    ["e", "<css-event-id-1>", "wss://relay.example.com"],
+    ["e", "<css-event-id-2>", "wss://relay.example.com"],
+    ["e", "<js-event-id>", "wss://relay.example.com"],
+    ["route", "/"],
     ["title", "Home"],
     ["description", "Welcome to my Nostr Web site"]
   ],
@@ -131,33 +99,61 @@ Parameterized replaceable event that links to current assets for a specific rout
 }
 ```
 
-### Site Index (34236)
+### Site Index (31126)
 
-Parameterized replaceable event that maps routes to their current page manifest IDs.
+Addressable event that maps routes to their current page manifest IDs. The `d` tag uses a truncated hash (like Git short hashes) for content-addressed versioning.
 
 **Required tags:**
 
-- `d` - Always `"site-index"` (addressable event key)
-- `default_route` - Default route (e.g., `/`)
+- `d` - First 7-12 characters of the SHA-256 hash of the `content` field (e.g., `"a1b2c3d"`, `"a1b2c3d4e5f6"`)
+- `x` - Full hex-encoded SHA-256 hash of the `content` field (to verify the `d` tag is correctly derived)
 
-**Content:** JSON object mapping routes to manifest event IDs
+**Optional tags:**
+
+- `alt` - Human-readable identifier (e.g., `"main"`, `"staging"`, `"v1.2.3"`) for convenience
+
+**Content:** JSON object mapping routes to page manifest event IDs (kind 1126)
 
 **Example:**
 
 ```json
 {
-  "kind": 34236,
-  "pubkey": "<site-author-pubkey>",
+  "kind": 31126,
+  "pubkey": "<site-pubkey>",
   "created_at": 1234567890,
   "tags": [
-    ["d", "site-index"],
-    ["default_route", "/"]
+    ["d", "a1b2c3d"],
+    ["x", "a1b2c3d4e5f6789...full-hash..."],
+    ["alt", "main"]
   ],
   "content": "{
-    \"/\": \"<manifest-event-id-1>\",
-    \"/about\": \"<manifest-event-id-2>\",
-    \"/blog/post-1\": \"<manifest-event-id-3>\"
+    \"/\": \"<page-manifest-event-id-1>\",
+    \"/about\": \"<page-manifest-event-id-2>\",
+    \"/blog/post-1\": \"<page-manifest-event-id-3>\"
   }",
+  "id": "<event-id>",
+  "sig": "<signature>"
+}
+```
+
+### Entrypoint (11126)
+
+Replaceable event that points to the current site index. Only the latest event per author is stored by relays.
+
+**Required tags:**
+
+- `a` - Address coordinates to the current site index: `["a", "31126:<pubkey>:<d-tag-hash>", "<relay-url>"]`
+  - The `<d-tag-hash>` is the truncated hash used in the site index's `d` tag
+
+**Example:**
+
+```json
+{
+  "kind": 11126,
+  "pubkey": "<site-pubkey>",
+  "created_at": 1234567890,
+  "tags": [["a", "31126:<site-pubkey>:a1b2c3d", "wss://relay.example.com"]],
+  "content": "",
   "id": "<event-id>",
   "sig": "<signature>"
 }
@@ -167,22 +163,25 @@ Parameterized replaceable event that maps routes to their current page manifest 
 
 ### Publishing
 
-1. Generate content events (40000-40003) with SHA-256 hashes
-2. Publish immutable assets to relays
-3. Create page manifest (34235) for each route, referencing asset event IDs
-4. Create/update site index (34236) with route-to-manifest mapping
-5. Generate DNS TXT record (see NIP-YY)
+1. Generate asset events (kind 1125) with SHA-256 hashes and MIME types
+2. Publish assets to relays
+3. Create page manifest (1126) for each page, referencing asset event IDs
+4. Create/update site index (31126) with route-to-manifest mapping
+5. Update entrypoint (11126) to point to the current site index
+6. Generate DNS TXT record (see NIP-ZZ)
 
 ### Fetching and Rendering
 
 1. Query DNS for `_nweb.<domain>` TXT record to get site pubkey and relays
-2. Fetch site index (34236) from relays: `{"kinds": [34236], "authors": ["<pubkey>"], "#d": ["site-index"]}`
-3. Parse site index to get manifest ID for requested route
-4. Fetch page manifest (34235): `{"ids": ["<manifest-id>"]}`
-5. Fetch all referenced assets (40000-40003) by event ID
-6. Verify SHA-256 hashes of JavaScript assets (Subresource Integrity)
-7. Assemble HTML with CSS and JS references
-8. Render in sandboxed environment with CSP enforcement
+2. Fetch entrypoint (11126) from relays: `{"kinds": [11126], "authors": ["<pubkey>"]}`
+3. Extract site index address from the `a` tag in entrypoint
+4. Fetch site index (31126) using the address coordinates
+5. Parse site index to get page manifest ID for requested route
+6. Fetch page manifest (1126): `{"ids": ["<manifest-id>"]}`
+7. Fetch all referenced assets (kind 1125) by event ID
+8. Parse each asset's `m` tag to determine MIME type (HTML, CSS, JavaScript, etc.)
+9. Assemble HTML with CSS and JS references
+10. Render in sandboxed environment with CSP enforcement
 
 ### Security Considerations
 
@@ -191,17 +190,25 @@ Parameterized replaceable event that maps routes to their current page manifest 
 - All events MUST be authored by the pubkey specified in DNS TXT record
 - Clients MUST reject events from other pubkeys
 
-**Subresource Integrity (SRI):**
+**Content Addressing:**
 
-- JavaScript assets (40002) MUST include `sha256` tag
-- Clients MUST verify hash before execution
-- CSS assets (40001) SHOULD include `sha256` tag
+- All assets (kind 1125) MUST include `x` tag with SHA-256 hash of the content
+  - Enables content deduplication: relays MAY use the `x` tag to identify and deduplicate identical content
+  - Allows content sharing: multiple sites can reference the same asset by its hash
+- Site indexes (31126) MUST include `x` tag with SHA-256 hash of the content
+  - The `x` tag is used to verify that the `d` tag (truncated hash) is correctly derived from the full hash
+  - Clients SHOULD verify that the first 7-12 characters of the `x` tag match the `d` tag
 
 **Content Security Policy:**
 
 - Default CSP: `default-src 'self'; script-src 'sha256-<hash>'`
-- Per-page CSP can be specified in manifest
+- Per-page CSP can be specified via the `csp` tag in Page Manifest (1126)
+- Custom CSP allows pages to:
+  - Allow specific external API connections (`connect-src`)
+  - Permit inline styles if needed (`style-src`)
+  - Control frame embedding (`frame-ancestors`)
 - Clients SHOULD enforce CSP to prevent code injection
+- If a page has a `csp` tag, it overrides the default CSP for that page only
 
 **Sandboxing:**
 
@@ -215,30 +222,26 @@ Parameterized replaceable event that maps routes to their current page manifest 
 - Cache only as offline fallback
 - Always attempt fresh DNS lookup
 
-**Site Index (34236):**
+**Entrypoint (11126):**
 
 - Always fetch fresh (TTL = 0)
-- Required to detect site updates
+- Required to get current site index
 
-**Page Manifests (34235):**
+**Site Index (31126):**
 
 - Cache with short TTL (30-60 seconds)
+- Required to detect site updates
+
+**Page Manifests (1126):**
+
+- Cache with reasonable TTL (content-addressed by ID)
 - Validate against current site index
 
-**Immutable Assets (40000-40003):**
+**Regular Assets (1125):**
 
-- Cache indefinitely (content-addressed)
-- Use SHA-256 for cache key validation
-
-## Media Assets
-
-Large media files (images, videos, fonts) SHOULD use Blossom (see NIP-YY for endpoint discovery):
-
-```html
-<img src="blossom://<sha256-hash>" alt="Image" />
-```
-
-Clients translate `blossom://` URLs to configured Blossom endpoints.
+- Cache with reasonable TTL (content-addressed)
+- Use SHA-256 hash (from `x` tag) for cache key validation
+- Can be indexed by MIME type (from `m` tag) for efficient queries
 
 ## Example Workflow
 
@@ -254,7 +257,7 @@ Clients translate `blossom://` URLs to configured Blossom endpoints.
 2. **Author sets DNS:**
 
    ```
-   _nweb.example.com TXT '{"v":1,"pk":"npub1...","relays":["wss://shu01.shugur.net"]}'
+   _nweb.example.com TXT '{"v":1,"pk":"npub1...","relays":["wss://relay.example.com"]}'
    ```
 
 3. **User visits site:**

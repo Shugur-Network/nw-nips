@@ -4,7 +4,7 @@
 
 `draft` `optional`
 
-This NIP standardizes DNS TXT record format for bootstrapping Nostr Web Pages clients with site metadata including author pubkey, relay URLs, and optional service endpoints.
+This NIP standardizes DNS TXT record format for bootstrapping Nostr Web Pages clients with site metadata including pubkey, relay URLs for discovery.
 
 ## Abstract
 
@@ -12,8 +12,8 @@ To make Nostr Web Pages accessible via traditional domain names, this NIP define
 
 - Site author's public key (for event verification)
 - Relay URLs where site events are published
-- Optional Blossom endpoints for media assets
-- Optional site index event ID for faster bootstrap
+
+The DNS record does NOT contain the site index event ID. Instead, clients query relays for the most recent entrypoint (kind 11126) from the specified pubkey, which points to the current site index (kind 31126), enabling automatic updates without DNS changes.
 
 ## Motivation
 
@@ -22,7 +22,7 @@ While Nostr events are identified by pubkey and event IDs, users expect to navig
 - **Human-readable addresses** - Users type domains, not npubs
 - **Author pinning** - DNS record pins the canonical site pubkey, preventing impersonation
 - **Relay discovery** - Clients know where to fetch events
-- **Media gateway hints** - Advertise Blossom endpoints for large assets
+- **Automatic updates** - DNS is set once; clients query for latest events by pubkey, eliminating DNS updates on republish
 
 ## DNS TXT Record Format
 
@@ -42,14 +42,12 @@ Examples:
 
 A single-line JSON string with the following fields:
 
-| Field        | Type    | Required | Description                                         |
-| ------------ | ------- | -------- | --------------------------------------------------- |
-| `v`          | integer | Yes      | Schema version (currently `1`)                      |
-| `pk`         | string  | Yes      | Site author pubkey (npub or hex)                    |
-| `relays`     | array   | Yes      | WSS relay URLs (at least one)                       |
-| `blossom`    | array   | No       | Blossom endpoint URLs (HTTPS)                       |
-| `site_index` | string  | No       | Site index event ID (kind 34236) for fast bootstrap |
-| `policy`     | object  | No       | Client hints (reserved for future use)              |
+| Field    | Type    | Required | Description                            |
+| -------- | ------- | -------- | -------------------------------------- |
+| `v`      | integer | Yes      | Schema version (currently `1`)         |
+| `pk`     | string  | Yes      | Site pubkey (npub or hex)       |
+| `relays` | array   | Yes      | WSS relay URLs (at least one)          |
+| `policy` | object  | No       | Client hints (reserved for future use) |
 
 ### Example Records
 
@@ -70,8 +68,6 @@ A single-line JSON string with the following fields:
   "v": 1,
   "pk": "5e56a2e48c4c5eb902e062bc30f92eabcf2e2fb96b5e7...",
   "relays": ["wss://relay.damus.io", "wss://nos.lol", "wss://relay.nostr.band"],
-  "blossom": ["https://cdn.satellite.earth", "https://blossom.primal.net"],
-  "site_index": "a1b2c3d4e5f6...",
   "policy": {
     "min_relays": 2
   }
@@ -118,34 +114,7 @@ Clients MUST support both formats.
 
 - Include at least 2-3 relays for redundancy
 - Use well-known public relays
-- Ensure relays support NIP-YY event kinds (40000-40003, 34235, 34236)
-
-## Blossom Endpoints
-
-Optional HTTPS URLs for Blossom media servers:
-
-```json
-"blossom": [
-  "https://cdn.satellite.earth",
-  "https://blossom.primal.net"
-]
-```
-
-Clients use these for resolving `blossom://<hash>` references in HTML/CSS.
-
-## Site Index Hint
-
-Optional event ID of kind 34236 site index for faster bootstrap:
-
-```json
-"site_index": "a1b2c3d4e5f6789..."
-```
-
-When provided, clients can:
-
-1. Fetch specific event by ID (faster than filter query)
-2. Validate it matches site pubkey and has correct `d` tag
-3. Fall back to filter query if event not found or invalid
+- Ensure relays support NIP-YY event kinds (1125, 1126, 31126, 11126)
 
 ## Policy Object
 
@@ -160,6 +129,80 @@ Reserved for future client hints:
 ```
 
 Current version ignores this field. Future NIPs may define standard policy fields.
+
+## Why No Site Index in DNS?
+
+**Design Decision:** The DNS record intentionally omits the site index event ID. This is a key architectural choice with significant benefits:
+
+### Benefits of Query-Based Discovery
+
+1. **Zero DNS Updates After Initial Setup**
+
+   - DNS is configured once with pubkey and relays
+   - All content updates happen via event publishing only
+   - No waiting for DNS propagation (which can take hours)
+   - No risk of DNS misconfiguration breaking updates
+
+2. **Instant Content Updates**
+
+   - Publishers republish by creating new events with fresh timestamps
+   - Clients query for latest event by `created_at`
+   - Updates visible immediately (relay propagation is seconds, not hours)
+
+3. **Supports Multiple Sites Per Pubkey**
+
+   - Multiple domains can point to the same pubkey
+   - Each site uses different `d` tags for site indices
+   - Clients distinguish sites by domain name, not just pubkey
+
+4. **Resilient to DNS Poisoning**
+
+   - Attacker can't point DNS to old/malicious site version
+   - DNS only contains pubkey (identity), not content pointer
+   - Latest content is always determined by on-chain timestamps
+
+5. **Simpler Publisher Workflow**
+   - No need to update DNS TXT record on every publish
+   - No need to wait for propagation to verify changes
+   - Reduces human error in DNS management
+
+### How It Works
+
+```
+┌─────────────┐
+│   Browser   │
+└──────┬──────┘
+       │
+       │ 1. User visits example.com
+       ▼
+┌─────────────────┐
+│   DNS Lookup    │ ◄─── Query _nweb.example.com
+│  (ONE TIME)     │      Returns: {pk, relays}
+└────────┬────────┘
+         │
+         │ 2. Connect to relays
+         ▼
+┌──────────────────┐
+│ Query Entrypoint │ ◄─── Filter: kind 11126, author=pk
+│  (EVERY VISIT)   │      Get latest replaceable event
+└────────┬─────────┘
+         │
+         │ 3. Extract site index address from 'a' tag
+         ▼
+┌──────────────────┐
+│ Fetch Site Index │ ◄─── Get addressable event: 31126:pk:d-hash
+│   (kind 31126)   │      Contains route mappings
+└────────┬─────────┘
+         │
+         │ 4. Got latest site index!
+         ▼
+┌──────────────────┐
+│  Load Site       │
+│  Content         │
+└──────────────────┘
+```
+
+Publishers republish → New entrypoint with newer timestamp → Points to new site index → Clients automatically fetch the new version.
 
 ## Client Behavior
 
@@ -183,12 +226,32 @@ Current version ignores this field. Future NIPs may define standard policy field
 - Ignore record and handle as regular navigation
 - Log warning for debugging
 
-### Relay Connection
+### Relay Connection and Site Discovery
 
 1. Connect to all relays in parallel
-2. Subscribe to site index filter
-3. Aggregate results from multiple relays
-4. Use most recent event by `created_at`
+2. Query for the most recent entrypoint event (kind 11126) from the pubkey:
+   ```javascript
+   {
+     kinds: [11126],
+     authors: [pubkey],
+     limit: 1
+   }
+   ```
+3. Extract the site index address from the `a` tag in the entrypoint event:
+   - The `a` tag format is: `["a", "31126:<pubkey>:<d-tag-hash>", "<relay-url>"]`
+   - Parse to get: `kind`, `pubkey`, and `d` tag value
+4. Query for the site index (kind 31126) using the extracted address coordinates:
+   ```javascript
+   {
+     kinds: [31126],
+     authors: [pubkey],
+     "#d": ["<d-tag-hash>"]
+   }
+   ```
+5. Aggregate results from multiple relays
+6. Use the event with the most recent `created_at` timestamp
+
+This two-step approach (Entrypoint → Site Index) ensures clients always load the latest published version without requiring DNS updates.
 
 ### Author Verification
 
@@ -234,7 +297,7 @@ TXT records have size limits:
 For large records, consider:
 
 - Using hex pubkey instead of npub (shorter)
-- Limiting relay/blossom array length
+- Limiting relay array length
 - Omitting optional fields
 
 ## DNSSEC
@@ -258,7 +321,7 @@ Clients SHOULD verify DNSSEC signatures when available.
 Type: TXT
 Name: _nweb
 Content: {"v":1,"pk":"npub1...","relays":["wss://relay.damus.io"]}
-TTL: Auto
+TTL: Auto or 3600 (DNS rarely needs updating)
 ```
 
 **Route 53:**
@@ -267,7 +330,7 @@ TTL: Auto
 Type: TXT
 Name: _nweb.example.com
 Value: "{"v":1,"pk":"npub1...","relays":["wss://relay.damus.io"]}"
-TTL: 300
+TTL: 3600 (DNS rarely needs updating)
 ```
 
 ### Client Lookup
@@ -328,14 +391,25 @@ If all listed relays censor content:
 
 **DNS TTL:**
 
-- Respect DNS TTL from provider
-- Re-query on TTL expiration
-- Cache offline for fallback only
+- DNS TTL can be set high (3600+ seconds) since the record rarely changes
+- The DNS record only contains pubkey and relay information
+- Site content updates happen via new events, not DNS changes
+- Re-query DNS only on TTL expiration or manual refresh
+- Cache DNS record for offline fallback
 
-**Record Updates:**
+**Site Content Updates:**
 
-- Users must wait for DNS propagation (usually minutes to hours)
-- Consider low TTL for frequently changing records
+- Clients query relays for the latest entrypoint (kind 11126) on each visit
+- The entrypoint points to the current site index (kind 31126) via the `a` tag
+- Use `created_at` timestamp to determine the most recent version
+- No DNS propagation delay for content updates
+- Publishers can update sites instantly by publishing new entrypoint events
+
+**Key Insight:** Separating DNS bootstrap (pubkey + relays) from content discovery (query latest entrypoint → site index) means:
+
+- DNS is configured once during initial setup
+- All subsequent site updates are instant (no DNS changes needed)
+- Clients automatically fetch the newest version from relays
 
 ## Reference Implementation
 
