@@ -35,18 +35,40 @@ This repository also hosts the landing page for [nweb.shugur.com](https://nweb.s
 - **Static landing page** when accessed via a normal browser
 - **Nostr Web example** when accessed via the Nostr Web browser extension
 
-Install links:
-
-- Chrome Web Store: [nostr-web-browser](https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif)
-- Firefox Add-on: [nostr-web-browser on AMO](https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif">
+        <img src="https://img.shields.io/badge/Chrome-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store" />
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/">
+        <img src="https://img.shields.io/badge/Firefox-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" />
+      </a>
+    </td>
+  </tr>
+</table>
 
 The dual behavior demonstrates the seamless integration of Nostr Web with existing web infrastructure.
 
 ## Related Projects
 
-- Nostr Web extension (Cross-browser):
-  - Chrome Web Store: [nostr-web-browser](https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif)
-  - Firefox Add-on: [nostr-web-browser on AMO](https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif">
+        <img src="https://img.shields.io/badge/Chrome-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store" />
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/">
+        <img src="https://img.shields.io/badge/Firefox-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" />
+      </a>
+    </td>
+  </tr>
+</table>
+
 - **[nw-publisher](https://github.com/Shugur-Network/nw-publisher)**: CLI tool for publishing static sites to Nostr (available on npm)
 
 ## Contributing
