@@ -57,25 +57,9 @@ The dual behavior demonstrates the seamless integration of Nostr Web with existi
 - **[nw-extension](https://github.com/Shugur-Network/nw-extension)**: Cross-browser extension for browsing Nostr Web sites
 - **[nw-publisher](https://github.com/Shugur-Network/nw-publisher)**: CLI tool for publishing static sites to Nostr (available on npm)
 
-## Contributing
-
-Contributions to the NIP specifications are welcome! Please:
-
-1. Fork this repository
-2. Create a feature branch
-3. Submit a Pull Request with your proposed changes
-
-For discussions about the protocol, visit the [GitHub Discussions](https://github.com/Shugur-Network/nw-nips/discussions).
-
 ## License
 
 MIT License - see [LICENSE](./LICENSE) for details.
-
-## Links
-
-- **Documentation**: [docs.shugur.com/nostr-web](https://docs.shugur.com/nostr-web)
-- **Demo Site**: [nweb.shugur.com](https://nweb.shugur.com)
-- **npm Package**: [nw-publish](https://www.npmjs.com/package/nw-publish)
 
 ---
 
