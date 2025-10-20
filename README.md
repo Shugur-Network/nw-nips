@@ -54,21 +54,7 @@ The dual behavior demonstrates the seamless integration of Nostr Web with existi
 
 ## Related Projects
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <a href="https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif">
-        <img src="https://img.shields.io/badge/Chrome-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store" />
-      </a>
-    </td>
-    <td align="center" width="50%">
-      <a href="https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/">
-        <img src="https://img.shields.io/badge/Firefox-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" />
-      </a>
-    </td>
-  </tr>
-</table>
-
+- **[nw-extension](https://github.com/Shugur-Network/nw-extension)**: Cross-browser extension for browsing Nostr Web sites
 - **[nw-publisher](https://github.com/Shugur-Network/nw-publisher)**: CLI tool for publishing static sites to Nostr (available on npm)
 
 ## Contributing
