@@ -112,7 +112,17 @@ Addressable event that maps routes to their current page manifest IDs. The `d` t
 
 - `alt` - Human-readable identifier (e.g., `"main"`, `"staging"`, `"v1.2.3"`) for convenience
 
-**Content:** JSON object mapping routes to page manifest event IDs (kind 1126)
+**Content:** JSON object with route mappings and optional metadata
+
+**Required fields:**
+
+- `routes` - Object mapping route paths to page manifest event IDs (kind 1126)
+
+**Optional fields:**
+
+- `version` - Semantic version string (e.g., `"1.2.3"`) for tracking site versions
+- `defaultRoute` - Default route to display when no specific route is requested (e.g., `"/"`)
+- `notFoundRoute` - Route to display for 404 errors (e.g., `"/404"`) or `null` if not specified
 
 **Example:**
 
@@ -127,9 +137,14 @@ Addressable event that maps routes to their current page manifest IDs. The `d` t
     ["alt", "main"]
   ],
   "content": "{
-    \"/\": \"<page-manifest-event-id-1>\",
-    \"/about\": \"<page-manifest-event-id-2>\",
-    \"/blog/post-1\": \"<page-manifest-event-id-3>\"
+    \"routes\": {
+      \"/\": \"<page-manifest-event-id-1>\",
+      \"/about\": \"<page-manifest-event-id-2>\",
+      \"/blog/post-1\": \"<page-manifest-event-id-3>\"
+    },
+    \"version\": \"1.2.3\",
+    \"defaultRoute\": \"/\",
+    \"notFoundRoute\": \"/404\"
   }",
   "id": "<event-id>",
   "sig": "<signature>"
@@ -176,12 +191,13 @@ Replaceable event that points to the current site index. Only the latest event p
 2. Fetch entrypoint (11126) from relays: `{"kinds": [11126], "authors": ["<pubkey>"]}`
 3. Extract site index address from the `a` tag in entrypoint
 4. Fetch site index (31126) using the address coordinates
-5. Parse site index to get page manifest ID for requested route
-6. Fetch page manifest (1126): `{"ids": ["<manifest-id>"]}`
-7. Fetch all referenced assets (kind 1125) by event ID
-8. Parse each asset's `m` tag to determine MIME type (HTML, CSS, JavaScript, etc.)
-9. Assemble HTML with CSS and JS references
-10. Render in sandboxed environment with CSP enforcement
+5. Parse site index content to extract `routes`, `version`, `defaultRoute`, and `notFoundRoute` fields
+6. Get page manifest ID for requested route from `content.routes`
+7. Fetch page manifest (1126): `{"ids": ["<manifest-id>"]}`
+8. Fetch all referenced assets (kind 1125) by event ID
+9. Parse each asset's `m` tag to determine MIME type (HTML, CSS, JavaScript, etc.)
+10. Assemble HTML with CSS and JS references
+11. Render in sandboxed environment with CSP enforcement
 
 ### Security Considerations
 
@@ -270,7 +286,8 @@ Replaceable event that points to the current site index. Only the latest event p
 ## Reference Implementation
 
 - Browser extension:
-  - https://github.com/Shugur-Network/nw-nips/tree/main/extension
+  - Chrome Web Store: [nostr-web-browser](https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif)
+  - Firefox Add-on: [nostr-web-browser on AMO](https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/)
 - Publisher CLI:
-  - https://www.npmjs.com/package/nw-publish (Recommended)
-  - https://github.com/Shugur-Network/nw-nips/tree/main/publisher
+  - [nw-publish on npm](https://www.npmjs.com/package/nw-publish) (Recommended)
+  - [publisher](https://github.com/Shugur-Network/nw-nips/tree/main/publisher)

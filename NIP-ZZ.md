@@ -45,7 +45,7 @@ A single-line JSON string with the following fields:
 | Field    | Type    | Required | Description                            |
 | -------- | ------- | -------- | -------------------------------------- |
 | `v`      | integer | Yes      | Schema version (currently `1`)         |
-| `pk`     | string  | Yes      | Site pubkey (npub or hex)       |
+| `pk`     | string  | Yes      | Site pubkey (npub or hex)              |
 | `relays` | array   | Yes      | WSS relay URLs (at least one)          |
 | `policy` | object  | No       | Client hints (reserved for future use) |
 
@@ -251,6 +251,21 @@ Publishers republish → New entrypoint with newer timestamp → Points to new s
 5. Aggregate results from multiple relays
 6. Use the event with the most recent `created_at` timestamp
 
+**Alternative Query Method:**
+
+If you want to discover all available site index versions (for version history or debugging), you can query without the `#d` filter:
+
+```javascript
+{
+  kinds: [31126],
+  authors: [pubkey]
+}
+```
+
+Then sort by `created_at` to get the latest version, or filter by specific `d` tags to get particular versions.
+
+**Note:** The entrypoint (kind 11126) is a replaceable event, so relays only store the latest one. This ensures clients always discover the current site index through the entrypoint's `a` tag reference.
+
 This two-step approach (Entrypoint → Site Index) ensures clients always load the latest published version without requiring DNS updates.
 
 ### Author Verification
@@ -413,5 +428,7 @@ If all listed relays censor content:
 
 ## Reference Implementation
 
-- DNS lookup: https://github.com/Shugur-Network/nw-nips/tree/main/extension
-- Record generation: https://github.com/Shugur-Network/nw-nips/tree/main/publisher
+- DNS lookup: (Browser extension)
+  - Chrome Web Store: [nostr-web-browser](https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif)
+  - Firefox Add-on: [nostr-web-browser on AMO](https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/)
+- Record generation: [publisher](https://github.com/Shugur-Network/nw-nips/tree/main/publisher)

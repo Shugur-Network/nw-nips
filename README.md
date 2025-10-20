@@ -35,13 +35,20 @@ Defines how Nostr Web sites are discovered via DNS TXT records:
 This repository also hosts the landing page for [nweb.shugur.com](https://nweb.shugur.com), which serves as both:
 
 - **Static landing page** when accessed via a normal browser
-- **Nostr Web example** when accessed via the [Nostr Web extension](https://github.com/Shugur-Network/nw-extention)
+- **Nostr Web example** when accessed via the Nostr Web browser extension
+
+Install links:
+
+- Chrome Web Store: [nostr-web-browser](https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif)
+- Firefox Add-on: [nostr-web-browser on AMO](https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/)
 
 The dual behavior demonstrates the seamless integration of Nostr Web with existing web infrastructure.
 
 ## Related Projects
 
-- **[nw-extention](https://github.com/Shugur-Network/nw-extention)**: Cross-browser extension for browsing Nostr Web sites (Chrome & Firefox)
+- Nostr Web extension (Cross-browser):
+  - Chrome Web Store: [nostr-web-browser](https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif)
+  - Firefox Add-on: [nostr-web-browser on AMO](https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/)
 - **[nw-publisher](https://github.com/Shugur-Network/nw-publisher)**: CLI tool for publishing static sites to Nostr (available on npm)
 
 ## Contributing
