@@ -10,12 +10,10 @@ This repository contains the Nostr Implementation Possibilities (NIPs) that defi
 
 Defines the event kinds and structure for web content on Nostr:
 
-- **Kind 40000**: HTML content (immutable)
-- **Kind 40001**: CSS stylesheets (immutable)
-- **Kind 40002**: JavaScript modules (immutable, requires SRI)
-- **Kind 40003**: Components (immutable, reusable HTML fragments)
-- **Kind 34235**: Page Manifest (replaceable, per-route metadata)
-- **Kind 34236**: Site Index (replaceable, route mapping)
+- **Kind 1125**: Asset - All web assets (HTML, CSS, JavaScript, fonts, etc.) with MIME type
+- **Kind 1126**: Page Manifest - Links assets for a specific page
+- **Kind 31126**: Site Index - Maps routes to page manifests (addressable)
+- **Kind 11126**: Entrypoint - Points to the current site index (replaceable)
 
 📄 [Read NIP-YY](./NIP-YY.md)
 
@@ -24,9 +22,9 @@ Defines the event kinds and structure for web content on Nostr:
 Defines how Nostr Web sites are discovered via DNS TXT records:
 
 - DNS TXT record format at `_nweb.<domain>`
-- Public key pinning for author verification
-- Relay configuration
-- Optional Blossom media server endpoints
+- Site author's public key (for event verification)
+- Relay URLs where site events are published
+- Automatic updates without DNS changes
 
 📄 [Read NIP-ZZ](./NIP-ZZ.md)
 
