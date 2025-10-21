@@ -265,7 +265,7 @@ Replaceable event that points to the current site index. Only the latest event p
 
    ```bash
    # Generate events
-   npx nw-publish ./my-site
+   npx nw-publisher ./my-site
 
    # Output: DNS JSON and event IDs
    ```
@@ -289,5 +289,5 @@ Replaceable event that points to the current site index. Only the latest event p
   - Chrome Web Store: [nostr-web-browser](https://chromewebstore.google.com/detail/nostr-web-browser/hhdngjdmlabdachflbdfapkogadodkif)
   - Firefox Add-on: [nostr-web-browser on AMO](https://addons.mozilla.org/en-US/firefox/addon/nostr-web-browser/)
 - Publisher CLI:
-  - [nw-publish on npm](https://www.npmjs.com/package/nw-publish) (Recommended)
+  - [nw-publisher on npm](https://www.npmjs.com/package/nw-publisher) (Recommended)
   - [publisher](https://github.com/Shugur-Network/nw-nips/tree/main/publisher)
